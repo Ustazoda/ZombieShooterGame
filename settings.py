@@ -6,7 +6,8 @@ SCREEN_HEIGHT = 1043  # O'yin oynasining balandligi piksellarda.
 FPS = 40              # Sekundiga kadrlar soni (Frames Per Second). O'yin tezligini belgilaydi.
 
 # O'yin dunyosi sozlamalari
-WORLD_WIDTH = SCREEN_WIDTH * 2 # Dunyo kengligi (2 ta fon rasmi)
+# settings.py
+WORLD_WIDTH = SCREEN_WIDTH * 3 # Dunyo kengligi (3 ta fon rasmi)
 CAMERA_SCROLL_BORDER = SCREEN_WIDTH // 2 # Kamera siljishni boshlaydigan chegara (ekran markazi)
 
 # Player sozlamalari

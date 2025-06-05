@@ -6,6 +6,10 @@ from zombie import Zombie # 'zombie.py' faylidan Zombie klassini import qilish.
 
 pygame.init() # Pygame kutubxonasini ishga tushirish. Bu Pygame funksiyalaridan foydalanish uchun zarur.
 
+# Font modulini ishga tushirish (agar hali ishga tushirilmagan bo'lsa)
+pygame.font.init()
+game_font = pygame.font.Font(None, 36) # O'yin paneli uchun shrift
+
 # Ovoz modulini ishga tushirish va ovoz fayllarini yuklash.
 pygame.mixer.init() # Pygame ovoz mikserini ishga tushirish.
 try:
@@ -33,59 +37,61 @@ except pygame.error as e:
     pygame.mixer.music.stop() # Agar musiqa yuklanmasa, ijro etishga urinmaslik
 
 # O'yin oynasini sozlash
-fon = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+win = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) # `fon` nomini `win` ga o'zgartirdim, odatda shunday ishlatiladi
 pygame.display.set_caption("Zombie Shooter")
 
 # Fon rasmini yuklash va masshtablash
 try:
-    bg1 = pygame.image.load('assets/zed.jpg')
-    bg1 = pygame.transform.scale(bg1, (SCREEN_WIDTH, SCREEN_HEIGHT))
-
-    bg2 = pygame.image.load('assets/zed2.jpg')
-    bg2 = pygame.transform.scale(bg2, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    # `bg` nomini `bg1` ga o'zgartirdim, chunki endi bir nechta fonlar bor
+    bg1 = pygame.transform.scale(pygame.image.load('assets/zed.png'), (SCREEN_WIDTH, SCREEN_HEIGHT))
+    bg2 = pygame.transform.scale(pygame.image.load('assets/zed2.png'), (SCREEN_WIDTH, SCREEN_HEIGHT)) # Yangi fon
+    bg3 = pygame.transform.scale(pygame.image.load('assets/zed3.png'), (SCREEN_WIDTH, SCREEN_HEIGHT)) # Yangi fon
 except FileNotFoundError:
-    print("Xato: Fon rasmi topilmadi. 'assets/zed.jpg' fayli mavjudligini tekshiring.")
+    print("Xato: Fon rasmi topilmadi. 'assets/zed.png', 'assets/zed2.png' yoki 'assets/zed3.png' fayllari mavjudligini tekshiring.")
     bg1 = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     bg1.fill((0, 0, 0))
     bg2 = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     bg2.fill((0, 0, 0))
+    bg3 = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    bg3.fill((0, 0, 0))
 
-# O'yinchi va Zombi obyektlarini yaratish
+
+# O'yinchi obyektini yaratish
 player = Player(PLAYER_START_X, PLAYER_START_Y, gun_sound_single, gun_sound_auto)
-zombie = Zombie(ZOMBIE_START_X, ZOMBIE_START_Y, zombie_hit_sound) # Zombi yaratishda ovoz obyektini uzatish
+
+# Zombi obyektlari ro'yxatini yaratish
+zombies = [Zombie(ZOMBIE_START_X, ZOMBIE_START_Y, zombie_hit_sound)] # Boshlang'ich zombi
 
 score = 0 # O'yin bali
 font = pygame.font.Font(None, 36) # Ballni ko'rsatish uchun shrift
-camera_offset = 0
+camera_offset = 0 # Kamera siljishi
+
+clock = pygame.time.Clock() # FPS ni boshqarish uchun clock obyektini yaratish
 
 def draw_game_elements():
     """Barcha o'yin elementlarini oynaga chizadi."""
-    # Fon rasmlarini chizish - TUZATILGAN QISM
-    # Birinchi fon rasmi
-    bg1_x = 0 - camera_offset
-    fon.blit(bg1, (bg1_x, 0))
-    
-    # Ikkinchi fon rasmi (birinchi fonning davomi sifatida)
-    bg2_x = SCREEN_WIDTH - camera_offset
-    fon.blit(bg2, (bg2_x, 0))
-    
-    # Uchinchi fon rasmi (cheksiz takrorlash uchun)
-    # Agar kamera 2-fon oralig'iga yetib kelsa
-    if camera_offset > 0:
-        bg3_x = (SCREEN_WIDTH * 2) - camera_offset
-        fon.blit(bg1, (bg3_x, 0))  # bg1 ni uchinchi pozitsiyada takrorlash
-    
-    # To'rtinchi fon rasmi
-    if camera_offset > SCREEN_WIDTH:
-        bg4_x = (SCREEN_WIDTH * 3) - camera_offset  
-        fon.blit(bg2, (bg4_x, 0))  # bg2 ni to'rtinchi pozitsiyada takrorlash
+    # Fonlarni kamera ofsetiga qarab chizish
+    win.blit(bg1, (0 - camera_offset, 0))
+    win.blit(bg2, (SCREEN_WIDTH - camera_offset, 0)) # Ikkinchi fon
+    win.blit(bg3, (SCREEN_WIDTH * 2 - camera_offset, 0)) # Uchinchi fon
 
-    player.draw(fon, camera_offset)
-    zombie.draw(fon, camera_offset)
+    # O'yinchi va zombilarni chizish (camera_offset bilan)
+    player.draw(win, camera_offset)
+    for zomb in zombies: # Barcha zombilarni chizish
+        zomb.draw(win, camera_offset) # Zombi chizishda camera_offset uzatildi
 
-    # O'yinchining sog'lig'ini chizish
-    player_health_text = font.render(f"Sog'liq: {player.health}", True, WHITE)
-    fon.blit(player_health_text, (SCREEN_WIDTH - player_health_text.get_width() - 10, 10))
+    # O'qlarni chizish (camera_offset bilan)
+    for bullet in player.bullets:
+        bullet.draw(win, camera_offset)
+
+    # === HUD (Heads-Up Display) paneli ===
+    # 1. O'yinchining sog'lig'i
+    health_text = game_font.render(f"Sog'liq: {int(player.health)}", True, WHITE)
+    win.blit(health_text, (10, 10)) # Yuqori chap burchakda
+
+    # 2. Ball
+    score_text = game_font.render(f"Ball: {score}", True, WHITE)
+    win.blit(score_text, (10, 50)) # Sog'liq ostida
 
     pygame.display.update() # Ekranni yangilash
 
@@ -93,7 +99,7 @@ run = True # O'yin tsikli davom etishini belgilovchi flag
 
 # O'yin tsikli
 while run:
-    pygame.time.delay(FPS) # O'yin tezligini boshqarish (kadr tezligini belgilaydi)
+    clock.tick(FPS) # FPS ni saqlash
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -107,9 +113,11 @@ while run:
         player.shoot(mouse_held)
         player.update_bullets()
 
-        zombie.update(player) # Zombining holatini yangilash (harakati, o'yinchiga hujumi)
-        
-        # Kamera siljishini boshqarish (tuzatilgan)
+        # Barcha zombilarni yangilash
+        for zomb in zombies:
+            zomb.update(player) # Har bir zombining holatini yangilash
+
+        # Kamera siljishini boshqarish
         # Agar o'yinchi ekranning o'ng chegarasidan o'tib ketsa
         if player.x - camera_offset > SCREEN_WIDTH - CAMERA_SCROLL_BORDER:
             camera_offset += player.speed # Kamerani o'yinchi tezligida siljitish
@@ -124,43 +132,48 @@ while run:
 
         # O'qlar va Zombilar o'rtasidagi to'qnashuvni tekshirish
         for bullet in player.bullets[:]: # O'qlar ro'yxati ustida iteratsiya qilish
-            # Har bir o'qning hitboxi va zombining hitboxi o'rtasida to'qnashuvni tekshirish
-            if bullet.rect.colliderect(zombie.hitbox):
-                # O'ZGARISH BU YERDA: O'q zombining rasmi o'rtasiga yetganini tekshirish
-                # Zombining markaziy hududini aniqlash (masalan, kengligining 40% dan 60% gacha)
-                zombie_center_left_bound = zombie.x + zombie.width * 0.4
-                zombie_center_right_bound = zombie.x + zombie.width * 0.6
+            for zomb in zombies[:]: # Barcha zombilar ustida iteratsiya qilish
+                # Har bir o'qning hitboxi va zombining hitboxi o'rtasida to'qnashuvni tekshirish
+                if bullet.rect.colliderect(zomb.hitbox):
+                    # O'q zombining rasmi o'rtasiga yetganini tekshirish
+                    # Zombining markaziy hududini aniqlash (masalan, kengligining 40% dan 60% gacha)
+                    zombie_center_left_bound = zomb.x + zomb.width * 0.4
+                    zombie_center_right_bound = zomb.x + zomb.width * 0.6
 
-                # Agar o'qning markazi zombining belgilangan "markaziy" hududida bo'lsa
-                if zombie_center_left_bound <= bullet.x <= zombie_center_right_bound:
-                    if zombie.active: # Agar zombi faol bo'lsa (tirik bo'lsa)
-                        player.bullets.remove(bullet) # O'qni ro'yxatdan o'chirish (chunki u zombiga tekkan)
-                        zombie.take_damage(1) # Zombiga 1 zarar yetkazish
+                    # Agar o'qning markazi zombining belgilangan "markaziy" hududida bo'lsa
+                    if zombie_center_left_bound <= bullet.x <= zombie_center_right_bound:
+                        if zomb.active: # Agar zombi faol bo'lsa (tirik bo'lsa)
+                            player.bullets.remove(bullet) # O'qni ro'yxatdan o'chirish (chunki u zombiga tekkan)
+                            zomb.take_damage(1) # Zombiga 1 zarar yetkazish
 
-                        if not zombie.active: # Agar zombi endi faol bo'lmasa (ya'ni o'lgan bo'lsa)
-                            score += 100 # Ballni oshirish
-                            print(f"Zombi yo'q qilindi! Ball: {score}") # Konsolga xabar
-                else:
-                    # Agar o'q hitboxga tegsa-yu, lekin markaziy qismga yetib bormagan bo'lsa,
-                    # o'qni hali ham o'chirishni istamasligingiz mumkin.
-                    # Hozircha o'qni o'chirmaymiz, u o'tishda davom etadi.
-                    pass
+                            if not zomb.active: # Agar zombi endi faol bo'lmasa (ya'ni o'lgan bo'lsa)
+                                score += 100 # Ballni oshirish
+                                print(f"Zombi yo'q qilindi! Ball: {score}") # Konsolga xabar
+                                # Yangi zombi qo'shish (bu yerda spawn_delay ichida zombining o'zi reaktivatsiya bo'ladi)
+                                # Agar siz har bir o'lgan zombining o'rniga yangisini paydo bo'lishini istasangiz:
+                                # zombies.append(Zombie(random.randrange(SCREEN_WIDTH, WORLD_WIDTH - ZOMBIE_WIDTH), ZOMBIE_START_Y, zombie_hit_sound))
+                        break # Bitta o'q faqat bitta zombiga zarar yetkazsin
+                    else:
+                        # Agar o'q hitboxga tegsa-yu, lekin markaziy qismga yetib bormagan bo'lsa,
+                        # o'qni hali ham o'chirishni istamasligingiz mumkin.
+                        # Hozircha o'qni o'chirmaymiz, u o'tishda davom etadi.
+                        pass # O'qni o'chirishdan qochish uchun
 
         draw_game_elements() # O'yin elementlarini chizish funksiyasini chaqirish.
     else:
         # Game Over ekrani.
-        fon.fill(BLACK) # O'yin oynasini qora rang bilan to'ldirish.
+        win.fill(BLACK) # O'yin oynasini qora rang bilan to'ldirish.
         font = pygame.font.Font(None, 74) # Katta shrift yaratish (74 o'lchamda).
         game_over_text = font.render("O'YIN TUGADI", True, RED) # "O'YIN TUGADI" matnini qizil rangda yaratish.
         # Matnni ekran markaziga joylashtirish uchun to'rtburchak (rect) obyektini olish.
         text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-        fon.blit(game_over_text, text_rect) # "O'YIN TUGADI" matnini ekranga chizish.
+        win.blit(game_over_text, text_rect) # "O'YIN TUGADI" matnini ekranga chizish.
 
         # Yakuniy ballni ko'rsatish.
         final_score_text = font.render(f"Sizning balingiz: {score}", True, WHITE) # Yakuniy ball matnini yaratish.
         # Yakuniy ball matnini biroz pastroqqa joylashtirish.
         final_score_rect = final_score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 80))
-        fon.blit(final_score_text, final_score_rect)
+        win.blit(final_score_text, final_score_rect)
 
         pygame.display.update() # Ekranni yangilash
 

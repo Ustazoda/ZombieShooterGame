@@ -23,10 +23,10 @@ class Zombie:
 
         original_width = 596
         original_height = 842
-        scale_factor = 1 # <-- BU YERDA O'ZGARISH: Rasmlarni masshtablash koeffitsienti 0.3 ga o'zgartirildi
+        self.scale_factor = 1 # Foydalanuvchi so'roviga ko'ra 1 holatida qoldirildi
 
-        self.width = int(original_width * scale_factor)
-        self.height = int(original_height * scale_factor)
+        self.width = int(original_width * self.scale_factor)
+        self.height = int(original_height * self.scale_factor)
 
         self.speed = ZOMBIE_SPEED
 
@@ -51,8 +51,8 @@ class Zombie:
 
         self.left_z = False # Chapga yurish holati
         self.right_z = False # O'ngga yurish holati
-        self.zombie_count = 0 # <-- QO'SHILDI: Animatsiya kadr hisoblagichini initsializatsiya qilish
-        self.last_direction = "right" # <-- QO'SHILDI: Zombining oxirgi yo'nalishini saqlash
+        self.zombie_count = 0 # Animatsiya kadr hisoblagichini initsializatsiya qilish
+        self.last_direction = "right" # FIX: last_move_direction o'rniga last_direction ishlatildi
 
         # Hitbox (to'qnashuvni aniqlash zonasi) sozlamalari.
         self.hitbox_offset_x = self.width * 0.1
@@ -79,7 +79,7 @@ class Zombie:
                 self.health = self.max_health # Yangi zombining sog'ligini to'liq qilish
                 # Zombining boshlang'ich joylashuvini WORLD_WIDTH bo'ylab tasodifiy qilish
                 # Zombi SCREEN_WIDTH dan WORLD_WIDTH - self.width gacha bo'lgan joyda paydo bo'lishi mumkin
-                self.x = random.randrange(SCREEN_WIDTH, WORLD_WIDTH - self.width) # <-- BU YER O'ZGARTIRILDI
+                self.x = random.randrange(SCREEN_WIDTH, WORLD_WIDTH - self.width)
                 self.y = ZOMBIE_START_Y # Y koordinatasi sabit qoladi
                 self.zombie_count = 0 # Yangi zombi paydo bo'lganda animatsiya hisoblagichini qayta o'rnatish
                 # print("Yangi zombi paydo bo'ldi!")
@@ -91,12 +91,12 @@ class Zombie:
                 self.x -= self.speed # Chapga harakatlanish
                 self.left_z = True
                 self.right_z = False
-                self.last_direction = "left" # <-- O'ZGARTIRILDI: Oxirgi yo'nalishni yangilash
+                self.last_direction = "left" # FIX: last_move_direction o'rniga last_direction ishlatildi
             elif self.x < player.x: # Agar zombi o'yinchidan chapda bo'lsa
                 self.x += self.speed # O'ngga harakatlanish
                 self.left_z = False
                 self.right_z = True
-                self.last_direction = "right" # <-- O'ZGARTIRILDI: Oxirgi yo'nalishni yangilash
+                self.last_direction = "right" # FIX: last_move_direction o'rniga last_direction ishlatildi
             else: # Agar zombi o'yinchiga yetib kelgan bo'lsa (harakatlanmaydi)
                 self.left_z = False
                 self.right_z = False
@@ -143,11 +143,12 @@ class Zombie:
         if not self.active:
             return # Zombi faol bo'lmasa, chizmaymiz
 
+        # Zombining ekrandagi chizish koordinatasini hisoblash
+        draw_x = self.x - camera_offset # <-- camera_offset ishlatilgan
+
         if self.zombie_count + 1 >= 30: # Animatsiya kadr hisoblagichini qayta o'rnatish
             self.zombie_count = 0
 
-        # Zombining ekrandagi chizish koordinatasini hisoblash
-        draw_x = self.x - camera_offset # <-- camera_offset ishlatilgan
 
         if self.left_z:
             win.blit(self.zombie_L[self.zombie_count // 10], (draw_x, self.y)) # <-- draw_x ishlatilgan
@@ -156,15 +157,13 @@ class Zombie:
             win.blit(self.zombie_R[self.zombie_count // 10], (draw_x, self.y)) # <-- draw_x ishlatilgan
             self.zombie_count += 1
         else:
-            # Agar zombi harakatlanmayotgan bo'lsa, oxirgi yo'nalish bo'yicha turgan holat rasmini chizish
-            if self.last_direction == "left": # <-- BU QISM O'ZGARTIRILDI: player.x o'rniga self.last_direction ishlatildi
-                win.blit(pygame.transform.flip(self.zombieStand, True, False), (draw_x, self.y))
+            # FIX: self.last_move_direction ni self.last_direction ga o'zgartirildi
+            if self.last_direction == "left": # Qaysi tomonga qarab turganini aniqlash
+                win.blit(self.zombie_L[0], (draw_x, self.y)) # <-- draw_x ishlatilgan
             else:
-                win.blit(self.zombieStand, (draw_x, self.y))
+                win.blit(self.zombie_R[0], (draw_x, self.y)) # <-- draw_x ishlatilgan
 
-
-        # Zombining sog'liq chizig'ini chizish
-        self.draw_health_bar(win, camera_offset) # <-- camera_offset uzatildi
+        self.draw_health_bar(win, camera_offset)
 
     def draw_health_bar(self, win, camera_offset): # <-- camera_offset parametri qo'shildi
         """
