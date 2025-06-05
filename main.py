@@ -43,9 +43,12 @@ pygame.display.set_caption("Zombie Shooter")
 # Fon rasmini yuklash va masshtablash
 try:
     # `bg` nomini `bg1` ga o'zgartirdim, chunki endi bir nechta fonlar bor
-    bg1 = pygame.transform.scale(pygame.image.load('assets/zed.png'), (SCREEN_WIDTH, SCREEN_HEIGHT))
-    bg2 = pygame.transform.scale(pygame.image.load('assets/zed2.png'), (SCREEN_WIDTH, SCREEN_HEIGHT)) # Yangi fon
-    bg3 = pygame.transform.scale(pygame.image.load('assets/zed3.png'), (SCREEN_WIDTH, SCREEN_HEIGHT)) # Yangi fon
+    bg1 = pygame.image.load('assets/zed.jpg')
+    bg1 = pygame.transform.scale(bg1, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    bg2 = pygame.image.load('assets/zed2.jpg')
+    bg2 = pygame.transform.scale(bg2, (SCREEN_WIDTH, SCREEN_HEIGHT)) # Yangi fon
+    bg3 = pygame.image.load('assets/zed3.jpg')
+    bg3 = pygame.transform.scale(bg3, (SCREEN_WIDTH, SCREEN_HEIGHT)) # Yangi fon
 except FileNotFoundError:
     print("Xato: Fon rasmi topilmadi. 'assets/zed.png', 'assets/zed2.png' yoki 'assets/zed3.png' fayllari mavjudligini tekshiring.")
     bg1 = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))

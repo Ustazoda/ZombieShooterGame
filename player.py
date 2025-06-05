@@ -54,7 +54,7 @@ class Player:
         self.hitbox = pygame.Rect(self.x + self.hitbox_offset_x, self.y + self.hitbox_offset_y,
                                   self.hitbox_width, self.hitbox_height)
 
-        self.health = 1000
+        self.health = 100
         self.alive = True
 
     def move(self, keys):
